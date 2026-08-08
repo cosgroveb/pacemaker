@@ -464,9 +464,10 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        PCMK_fail_fast
      - :ref:`boolean <boolean>`
      - no
-     - By default, if a Pacemaker subsystem crashes, the main ``pacemakerd``
-       process will attempt to restart it. If this variable is set to ``yes``,
-       ``pacemakerd`` will panic the local host instead.
+     - By default, if a Pacemaker subsystem crashes or stops responding to IPC,
+       the main ``pacemakerd`` process will attempt to restart it. If this
+       variable is set to ``yes``, ``pacemakerd`` will panic the local host
+       instead.
 
    * - .. _pcmk_panic_action:
 

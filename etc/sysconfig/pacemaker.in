@@ -183,9 +183,9 @@
 
 # PCMK_fail_fast
 #
-# By default, if a Pacemaker subsystem crashes, the main pacemakerd process
-# will attempt to restart it. If this variable is set to "yes", pacemakerd
-# will panic the local host instead.
+# By default, if a Pacemaker subsystem crashes or stops responding to IPC, the
+# main pacemakerd process will attempt to restart it. If this variable is set
+# to "yes", pacemakerd will panic the local host instead.
 #
 # Default: PCMK_fail_fast="no"
 

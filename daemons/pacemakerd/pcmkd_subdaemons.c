@@ -175,6 +175,12 @@ check_next_subdaemon(void *user_data)
                            name, pid, child->check_count,
                            pcmk__plural_s(child->check_count));
                 stop_child(child, SIGKILL);
+                if ((shutdown_trigger == NULL)
+                    && pcmk__is_set(child->flags, child_respawn)
+                    && pcmk__is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
+                    pcmk__panic("Subdaemon is unresponsive");
+                }
+
                 if (pcmk__is_set(child->flags, child_respawn)) {
                     // Respawn limit hasn't been reached, so retry another round
                     child->check_count = 0;
