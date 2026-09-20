@@ -10,6 +10,8 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
 
+SUBDIRS = tests
+
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD

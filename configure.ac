@@ -2016,6 +2016,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
+                daemons/pacemakerd/tests/Makefile                   \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/schedulerd/Makefile                         \
                 devel/Makefile                                      \
