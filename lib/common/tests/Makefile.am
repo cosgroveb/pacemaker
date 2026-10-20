@@ -20,6 +20,7 @@ SUBDIRS += health
 SUBDIRS += io
 SUBDIRS += iso8601
 SUBDIRS += lists
+SUBDIRS += mainloop
 SUBDIRS += messages
 SUBDIRS += nodes
 SUBDIRS += nvpair

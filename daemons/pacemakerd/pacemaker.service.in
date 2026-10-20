@@ -49,6 +49,9 @@ SuccessExitStatus=100
 
 ExecStart=@sbindir@/pacemakerd
 
+# Child daemons inherit this budget for locked IPC rings.
+LimitMEMLOCK=8M
+
 # Systemd v227 and above can limit the number of processes spawned by a
 # service. That is a bad idea for an HA cluster resource manager, so disable it
 # by default. The administrator can create a local override if they really want

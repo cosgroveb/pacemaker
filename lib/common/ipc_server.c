@@ -29,7 +29,6 @@
 
 #include <crm/common/ipc.h>         // crm_ipc_flags, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT
-#include <crm/common/mainloop.h>    // mainloop_add_ipc_server
 #include <crm/common/results.h>     // crm_exit, pcmk_rc_*
 #include <crm/common/xml.h>
 #include <crm/crm.h>                // CRM_SYSTEM_CRMD
@@ -1057,6 +1056,22 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     return rc;
 }
 
+static qb_ipcs_service_t *
+serve_ipc(const char *name, struct qb_ipcs_service_handlers *callbacks,
+          enum qb_loop_priority prio)
+{
+    uint32_t flags = 0U;
+
+#ifdef HAVE_QB_IPCS_CREATE_2
+    flags = QB_IPCS_REQUIRE_LOCKED_MAPPINGS;
+#else
+    pcmk__warn("%s IPC ring pages will not be locked because this libqb "
+               "version does not support it", name);
+#endif
+
+    return pcmk__add_mainloop_ipc_server(name, callbacks, prio, flags);
+}
+
 /*!
  * \internal
  * \brief Add an IPC server to the main loop for the CIB manager API
@@ -1074,11 +1089,9 @@ pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
     pcmk__assert((ipcs_ro != NULL) && (*ipcs_ro == NULL) && (ro_cb != NULL)
                  && (ipcs_rw != NULL) && (*ipcs_rw == NULL) && (rw_cb != NULL));
 
-    *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO, QB_IPC_SHM,
-                                       ro_cb);
+    *ipcs_ro = serve_ipc(PCMK__SERVER_BASED_RO, ro_cb, QB_LOOP_MED);
 
-    *ipcs_rw = mainloop_add_ipc_server(PCMK__SERVER_BASED_RW, QB_IPC_SHM,
-                                       rw_cb);
+    *ipcs_rw = serve_ipc(PCMK__SERVER_BASED_RW, rw_cb, QB_LOOP_MED);
 
     if ((*ipcs_ro == NULL) || (*ipcs_rw == NULL)) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1105,8 +1118,7 @@ pcmk__serve_controld_ipc(qb_ipcs_service_t **ipcs,
 {
     pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_controld),
-                                    QB_IPC_SHM, cb);
+    *ipcs = serve_ipc(pcmk__server_ipc_name(pcmk_ipc_controld), cb, QB_LOOP_MED);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1129,8 +1141,7 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
 {
     pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_attrd),
-                                    QB_IPC_SHM, cb);
+    *ipcs = serve_ipc(pcmk__server_ipc_name(pcmk_ipc_attrd), cb, QB_LOOP_MED);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1151,17 +1162,7 @@ void
 pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
-    uint32_t flags = 0U;
-
-#ifdef HAVE_QB_IPCS_CREATE_2
-    flags = QB_IPCS_REQUIRE_LOCKED_MAPPINGS;
-#else
-    pcmk__warn("Executor IPC ring pages will not be locked because this libqb "
-               "version does not support it");
-#endif
-
-    *ipcs = pcmk__add_mainloop_ipc_server(
-        pcmk__server_ipc_name(pcmk_ipc_execd), cb, flags);
+    *ipcs = serve_ipc(pcmk__server_ipc_name(pcmk_ipc_execd), cb, QB_LOOP_MED);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1182,8 +1183,7 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
 {
     pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(pcmk_ipc_fenced),
-                                              QB_IPC_SHM, cb, QB_LOOP_HIGH);
+    *ipcs = serve_ipc(pcmk__server_ipc_name(pcmk_ipc_fenced), cb, QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1206,8 +1206,7 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
 {
     pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_pacemakerd),
-                                    QB_IPC_SHM, cb);
+    *ipcs = serve_ipc(pcmk__server_ipc_name(pcmk_ipc_pacemakerd), cb, QB_LOOP_MED);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1230,8 +1229,7 @@ pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
 {
     pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_schedulerd),
-                                    QB_IPC_SHM, cb);
+    *ipcs = serve_ipc(pcmk__server_ipc_name(pcmk_ipc_schedulerd), cb, QB_LOOP_MED);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
