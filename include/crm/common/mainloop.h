@@ -111,32 +111,6 @@ struct ipc_client_callbacks {
     void (*destroy)(void *userdata);
 };
 
-qb_ipcs_service_t *mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
-                                           struct qb_ipcs_service_handlers *callbacks);
-
-/*!
- * \brief Start server-side API end-point, hooked into the internal event loop
- *
- * \param[in] name    name of the IPC end-point ("address" for the client)
- * \param[in] type       Ignored
- * \param[in] callbacks  defines libqb's IPC service-level handlers
- * \param[in] priority  priority relative to other events handled in the
- *                      abstract handling loop, use #QB_LOOP_MED when unsure
- *
- * \return libqb's opaque handle to the created service abstraction
- *
- * \note For portability concerns, do not use this function if you keep
- *       \p priority as #QB_LOOP_MED, stick with #mainloop_add_ipc_server
- *       (with exactly such semantics) instead (once you link with this new
- *       symbol employed, you can't downgrade the library freely anymore).
- *
- * \note The intended effect will only get fully reflected when run-time
- *       linked to patched libqb: https://github.com/ClusterLabs/libqb/pull/352
- */
-qb_ipcs_service_t *mainloop_add_ipc_server_with_prio(const char *name,
-                                                    enum qb_ipc_type type,
-                                                    struct qb_ipcs_service_handlers *callbacks,
-                                                    enum qb_loop_priority prio);
 
 void mainloop_del_ipc_server(qb_ipcs_service_t * server);
 
@@ -196,6 +170,8 @@ void pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
                           bool (*check)(unsigned int));
 
 #define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
+
+#include <crm/common/mainloop_compat.h>
 
 #ifdef __cplusplus
 }
